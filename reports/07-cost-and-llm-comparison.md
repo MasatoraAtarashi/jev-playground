@@ -38,16 +38,16 @@
 
 ```mermaid
 graph LR
-    subgraph Generative_LLM [生成型 LLM: 直列トークン生成]
-        A[入力 State + 20質問] --> B[トークン1]
-        B --> C[トークン2]
-        C --> D[...]
-        D --> E[トークン500 完了 (約2.5秒 / 高出力コスト)]
+    subgraph Generative_LLM ["生成型 LLM: 直列トークン生成"]
+        A["入力 State + 20質問"] --> B["トークン1"]
+        B --> C["トークン2"]
+        C --> D["..."]
+        D --> E["トークン500 完了 (約2.5秒 / 高出力コスト)"]
     end
 
-    subgraph Jev_SystemOne [Jev: Logits 並列直接評価]
-        F[入力 State + 20質問] --> G[内部並列 Attention / Logits 評価]
-        G --> H[20質問の確定値を出力 (220ms / 極小コスト)]
+    subgraph Jev_SystemOne ["Jev: Logits 並列直接評価"]
+        F["入力 State + 20質問"] --> G["内部並列 Attention / Logits 評価"]
+        G --> H["20質問の確定値を出力 (220ms / 極小コスト)"]
     end
 ```
 

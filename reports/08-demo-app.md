@@ -16,23 +16,28 @@ Jev の最大の特徴である **「超低遅延（~220ms）」「多軸並列�
 
 ```mermaid
 graph TD
-    A[入力: コード Diff / サポート問合せ / エージェント指示] --> B[Jev System One 判定レイヤー (218ms)]
+    A["入力: コード Diff / サポート問合せ / エージェント指示"] --> B["Jev System One 判定レイヤー (218ms)"]
     
-    subgraph Jev_Parallel_Evaluation [Jev 6軸超並列直接評価]
-        B --> C1[危険度 score: 0〜3]
-        B --> C2[意図 choice: 5分類]
-        B --> C3[シークレット noul: 0〜1]
-        B --> C4[不可逆性 noul: 0〜1]
-        B --> C5[緊急度 score: 0〜2]
-        B --> C6[曖昧性 noul: 0〜1]
+    subgraph Jev_Parallel_Evaluation ["Jev 6軸超並列直接評価"]
+        B --> C1["危険度 score: 0〜3"]
+        B --> C2["意図 choice: 5分類"]
+        B --> C3["シークレット noul: 0〜1"]
+        B --> C4["不可逆性 noul: 0〜1"]
+        B --> C5["緊急度 score: 0〜2"]
+        B --> C6["曖昧性 noul: 0〜1"]
     end
 
-    C1 & C2 & C3 & C4 & C5 & C6 --> D[自律ディスパッチ判定 (Zero Human Delay)]
+    C1 --> D["自律ディスパッチ判定 (Zero Human Delay)"]
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    C5 --> D
+    C6 --> D
 
-    D -->|高リスク / 破壊的変更| E1[🚨 GitHub PR 自動遮断 & PagerDuty 緊急発火]
-    D -->|二重課金 / 激怒| E2[🔥 Stripe 即時返金ドラフト & VIP エスカレ]
-    D -->|エージェント指示| E3[⚡️ Google Calendar / Drive ツール即時実行]
-    D -->|通常質問| E4[✨ ナレッジベース自動サジェスト & 通常キュー]
+    D --> E1["🚨 GitHub PR 自動遮断 & PagerDuty 緊急発火"]
+    D --> E2["🔥 Stripe 即時返金ドラフト & VIP エスカレ"]
+    D --> E3["⚡️ Google Calendar / Drive ツール即時実行"]
+    D --> E4["✨ ナレッジベース自動サジェスト & 通常キュー"]
 ```
 
 ---
