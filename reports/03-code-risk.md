@@ -6,6 +6,8 @@
 
 ![危険度](img/03-code-risk.png)
 
+
+
 | id | 変更 | 正解risk | risk | 要レビュー | 正解kind | kind(conf) | 不可逆 | secret |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | d1 | READMEのtypo修正 | 0 | 0.00 | 0.45 | docs | docs(1.00) | 0.03 | 0.01 |

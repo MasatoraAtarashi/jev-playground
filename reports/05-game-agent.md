@@ -6,6 +6,8 @@
 
 ![ゲーム NPC](img/05-game-agent.png)
 
+
+
 | turn | 状況 | 参照 | Jev の行動 | conf | 危険 | 敵対 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | HP100 薬2 MP30 距離6 前:approach | cast_fireball | ✅ cast_fireball | 0.82 | 0.12 | 0.13 | 2426 |

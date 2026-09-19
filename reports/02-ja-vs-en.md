@@ -7,6 +7,8 @@
 
 ![日英比較](img/02-ja-vs-en.png)
 
+
+
 | case | 正解 cat/urg/refund | JJ | JE | EE |
 | --- | --- | --- | --- | --- |
 | c1 | billing/2/Y | billing(1.00)/1.98/0.98 | billing(1.00)/1.99/0.99 | billing(1.00)/1.97/0.99 |

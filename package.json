@@ -7,9 +7,15 @@
   },
   "scripts": {
     "smoke": "node --env-file=.env --experimental-strip-types src/smoke.ts",
-    "exp": "node --env-file=.env --experimental-strip-types"
+    "exp": "node --env-file=.env --experimental-strip-types",
+    "charts": "python3 tools/charts.py",
+    "demo:server": "node demo/server.js",
+    "demo:record": "node demo/record-demo.cjs"
   },
   "dependencies": {
     "@typesafe-ai/sdk": "^0.6.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
   }
 }

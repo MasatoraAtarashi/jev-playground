@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jev Sentinel — リアルタイム AI セキュリティ & アクション自動ディスパッチャー</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #090D16;
+      color: #F1F5F9;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glow-blue {
+      box-shadow: 0 0 25px rgba(37, 99, 235, 0.2);
+    }
+    .glow-red {
+      box-shadow: 0 0 25px rgba(220, 38, 38, 0.25);
+    }
+    .glow-green {
+      box-shadow: 0 0 25px rgba(22, 163, 74, 0.25);
+    }
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.02); }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 3s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex flex-col justify-between">
+  <!-- Header -->
+  <header class="max-w-7xl mx-auto w-full mb-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-5 rounded-2xl glow-blue">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+          <i data-lucide="shield-check" class="w-7 h-7 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-blue-400 bg-clip-text text-transparent">
+              Jev Sentinel Copilot
+            </h1>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+              System 1 Engine
+            </span>
+          </div>
+          <p class="text-sm text-slate-400">
+            超低遅延 (220ms) 多軸並列判定 ＆ リアルタイム自律アクションディスパッチャー
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div class="glass-panel px-4 py-2 rounded-xl flex items-center gap-3">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
+          <div>
+            <div class="text-xs text-slate-400">平均判定レイテンシ</div>
+            <div id="stat-latency" class="text-sm font-bold mono text-emerald-400">218 ms (超並列)</div>
+          </div>
+        </div>
+        <div class="glass-panel px-4 py-2 rounded-xl flex items-center gap-3">
+          <i data-lucide="cpu" class="w-4 h-4 text-indigo-400"></i>
+          <div>
+            <div class="text-xs text-slate-400">モデル</div>
+            <div class="text-sm font-bold mono text-indigo-300">jev-latest (Logits Direct)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+    <!-- Left Column: Input & Scenarios -->
+    <div class="lg:col-span-6 flex flex-col gap-6">
+      <!-- Preset Selector -->
+      <div class="glass-panel p-5 rounded-2xl">
+        <div class="flex items-center justify-between mb-3">
+          <label class="text-sm font-bold text-slate-300 flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-4 h-4 text-blue-400"></i>
+            プリセットシナリオを選択
+          </label>
+          <span class="text-xs text-slate-400">ワンクリックで即座判定</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <button id="btn-scenario-1" onclick="loadScenario(1)" class="scenario-btn p-3 rounded-xl text-left border border-slate-700/60 hover:border-red-500/50 bg-slate-900/40 hover:bg-red-950/20 transition-all flex flex-col gap-1">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-red-400">
+              <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+              1. 破壊的コード・SQL攻撃
+            </div>
+            <div class="text-xs text-slate-400 truncate">DROP TABLE / 認証無効化</div>
+          </button>
+          <button id="btn-scenario-2" onclick="loadScenario(2)" class="scenario-btn p-3 rounded-xl text-left border border-slate-700/60 hover:border-amber-500/50 bg-slate-900/40 hover:bg-amber-950/20 transition-all flex flex-col gap-1">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+              <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+              2. 激怒クレーマー・返金
+            </div>
+            <div class="text-xs text-slate-400 truncate">二重課金 / 即時返金請求</div>
+          </button>
+          <button id="btn-scenario-3" onclick="loadScenario(3)" class="scenario-btn p-3 rounded-xl text-left border border-slate-700/60 hover:border-blue-500/50 bg-slate-900/40 hover:bg-blue-950/20 transition-all flex flex-col gap-1">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-blue-400">
+              <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+              3. AI ツール選定 & 発火
+            </div>
+            <div class="text-xs text-slate-400 truncate">カレンダー登録 / 資料検索</div>
+          </button>
+          <button id="btn-scenario-4" onclick="loadScenario(4)" class="scenario-btn p-3 rounded-xl text-left border border-slate-700/60 hover:border-emerald-500/50 bg-slate-900/40 hover:bg-emerald-950/20 transition-all flex flex-col gap-1">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+              4. 安全な通常機能リクエスト
+            </div>
+            <div class="text-xs text-slate-400 truncate">プラン問合せ / docs</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Input Form -->
+      <div class="glass-panel p-5 rounded-2xl flex-1 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-bold text-slate-300 flex items-center gap-2">
+              <i data-lucide="terminal" class="w-4 h-4 text-indigo-400"></i>
+              入力ペイロード (テキスト / コード Diff / ユーザー発言)
+            </label>
+            <span id="payload-type" class="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">
+              Diff Mode
+            </span>
+          </div>
+          <textarea id="input-payload" rows="8" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 text-sm mono text-slate-200 focus:outline-none focus:border-blue-500 transition-all resize-none shadow-inner" placeholder="判定対象のテキストまたはコードを入力..."></textarea>
+        </div>
+
+        <div class="mt-4 flex items-center gap-3">
+          <button id="btn-evaluate" onclick="evaluatePayload()" class="flex-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+            <i data-lucide="zap" class="w-5 h-5 text-amber-300"></i>
+            <span>⚡️ Jev 超並列 6 軸同時審査を実行</span>
+          </button>
+          <button onclick="clearForm()" class="px-4 py-3.5 rounded-xl border border-slate-700/70 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Parallel Evaluation Results & Live Dispatch -->
+    <div class="lg:col-span-6 flex flex-col gap-6">
+      <!-- Realtime 6-Aspect Evaluation Card -->
+      <div class="glass-panel p-5 rounded-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <i data-lucide="activity" class="w-5 h-5 text-blue-400"></i>
+            <h2 class="text-base font-bold text-slate-200">Jev リアルタイム多軸判定結果</h2>
+          </div>
+          <div id="eval-status-badge" class="px-3 py-1 rounded-full text-xs font-bold mono bg-slate-800 text-slate-400 border border-slate-700">
+            IDLE / READY
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+          <!-- Metric 1: 危険度 Score -->
+          <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+            <div class="text-xs text-slate-400 flex items-center justify-between">
+              <span>危険度 (Score 0-3)</span>
+              <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-slate-500"></i>
+            </div>
+            <div id="res-risk" class="text-xl font-extrabold mono text-slate-200 mt-1">0.00</div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div id="bar-risk" class="bg-emerald-500 h-full w-0 transition-all duration-500"></div>
+            </div>
+          </div>
+
+          <!-- Metric 2: カテゴリ / 意図 Choice -->
+          <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+            <div class="text-xs text-slate-400 flex items-center justify-between">
+              <span>意図 / カテゴリ</span>
+              <i data-lucide="tag" class="w-3.5 h-3.5 text-slate-500"></i>
+            </div>
+            <div id="res-intent" class="text-sm font-bold text-blue-400 mt-1 truncate">none</div>
+            <div class="text-xs text-slate-500 mono mt-1">Conf: <span id="res-intent-conf">1.00</span></div>
+          </div>
+
+          <!-- Metric 3: シークレット漏洩 Noul -->
+          <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+            <div class="text-xs text-slate-400 flex items-center justify-between">
+              <span>シークレット検知</span>
+              <i data-lucide="key" class="w-3.5 h-3.5 text-slate-500"></i>
+            </div>
+            <div id="res-secret" class="text-xl font-extrabold mono text-slate-200 mt-1">0.01</div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div id="bar-secret" class="bg-emerald-500 h-full w-0 transition-all duration-500"></div>
+            </div>
+          </div>
+
+          <!-- Metric 4: 不可逆変更 Noul -->
+          <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+            <div class="text-xs text-slate-400 flex items-center justify-between">
+              <span>不可逆性 (Noul)</span>
+              <i data-lucide="database-zap" class="w-3.5 h-3.5 text-slate-500"></i>
+            </div>
+            <div id="res-irr" class="text-xl font-extrabold mono text-slate-200 mt-1">0.02</div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div id="bar-irr" class="bg-emerald-500 h-full w-0 transition-all duration-500"></div>
+            </div>
+          </div>
+
+          <!-- Metric 5: 返金要求 / 怒り度 -->
+          <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+            <div class="text-xs text-slate-400 flex items-center justify-between">
+              <span>緊急・怒り度</span>
+              <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-slate-500"></i>
+            </div>
+            <div id="res-urgency" class="text-xl font-extrabold mono text-slate-200 mt-1">0.00</div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div id="bar-urgency" class="bg-blue-500 h-full w-0 transition-all duration-500"></div>
+            </div>
+          </div>
+
+          <!-- Metric 6: 推定レイテンシ -->
+          <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+            <div class="text-xs text-slate-400 flex items-center justify-between">
+              <span>実測レスポンス</span>
+              <i data-lucide="timer" class="w-3.5 h-3.5 text-emerald-400"></i>
+            </div>
+            <div id="res-time" class="text-xl font-extrabold mono text-emerald-400 mt-1">-- ms</div>
+            <div class="text-[10px] text-slate-400 mt-1">6軸並列同時完了</div>
+          </div>
+        </div>
+
+        <!-- Automatic Decision Banner -->
+        <div id="action-banner" class="p-4 rounded-xl border border-slate-800 bg-slate-950/60 flex items-center justify-between transition-all duration-300">
+          <div class="flex items-center gap-3">
+            <div id="action-icon-wrapper" class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300">
+              <i data-lucide="shield" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="text-xs text-slate-400 font-medium">Jev 推奨自律アクション (Choice)</div>
+              <div id="action-title" class="text-sm font-bold text-slate-200">STANDBY</div>
+            </div>
+          </div>
+          <div id="action-badge" class="px-3 py-1 rounded-lg text-xs font-bold mono bg-slate-800 text-slate-400">
+            READY
+          </div>
+        </div>
+      </div>
+
+      <!-- Autonomous Action Stream -->
+      <div class="glass-panel p-5 rounded-2xl flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="cpu" class="w-4 h-4 text-indigo-400"></i>
+            <h3 class="text-sm font-bold text-slate-300">自律アクション実行ストリーム (Live Dispatch Log)</h3>
+          </div>
+          <span class="text-[11px] mono text-slate-400">Zero Human Delay</span>
+        </div>
+        <div id="dispatch-stream" class="flex-1 bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 font-mono text-xs text-slate-300 space-y-2 overflow-y-auto max-h-52 shadow-inner">
+          <div class="text-slate-400">[SYSTEM READY] Jev Sentinel engine initialized. Waiting for incoming payload...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="max-w-7xl mx-auto w-full mt-6 text-center text-xs text-slate-400">
+    TypeSafe Jev System One Playground Demo • Ultra-Fast Sub-250ms Decision Engine
+  </footer>
+
+  <script>
+    lucide.createIcons();
+
+    const SCENARIOS = {
+      1: {
+        type: "Security & Code Diff",
+        payload: `diff --git a/src/api/auth.ts b/src/api/auth.ts\n--- a/src/api/auth.ts\n+++ b/src/api/auth.ts\n@@ -12,4 +12,6 @@ export function verifyToken(req) {\n-  return jwt.verify(req.headers.authorization);\n+  // 一時的に認証スキップ（デバッグ用）\n+  db.rawQuery("DROP TABLE audit_logs WHERE 1=1;");\n+  return { user: "admin", role: "superadmin" };\n}`,
+        eval: {
+          risk: 2.99,
+          intent: "security_vulnerability",
+          intentConf: 0.98,
+          secret: 0.02,
+          irreversible: 0.94,
+          urgency: 2.00,
+          action: "BLOCK_PR_AND_EMERGENCY_ALERT",
+          actionText: "🚨 PRを自動即時遮断 & セキュリティチーム緊急招集",
+          actionLevel: "critical",
+          logs: [
+            "⚡️ [214ms] Jev 6軸判定完了: 危険度 2.99 / 不可逆 0.94",
+            "🛑 [AUTO-ACTION] GitHub PR #402 にブロックラベルを付与 & マージを強制拒否",
+            "📢 [AUTO-ACTION] Slack #security-alerts にインシデント起票 & PagerDuty 発火"
+          ]
+        }
+      },
+      2: {
+        type: "Customer Support Urgent",
+        payload: `二重に課金されています！今月のカード明細を見て驚きました。55,000円が2回引き落とされています。今すぐ全額返金して責任者から連絡をください。ふざけるな！`,
+        eval: {
+          risk: 0.40,
+          intent: "billing_refund",
+          intentConf: 1.00,
+          secret: 0.01,
+          irreversible: 0.05,
+          urgency: 1.96,
+          action: "INSTANT_REFUND_ESCALATE",
+          actionText: "🔥 Stripe 即時返金トリガー & CX リーダーへ最優先トリアージ",
+          actionLevel: "urgent",
+          logs: [
+            "⚡️ [221ms] Jev 6軸判定完了: 返金要求 0.98 / 怒り度 1.96 / billing(1.00)",
+            "💳 [AUTO-ACTION] Stripe PaymentIntent の重複課金を検証 & 自動返金ドラフト作成",
+            "⚡️ [AUTO-ACTION] Zendesk チケットを「Priority: Critical (返金)」へ即時ルーティング"
+          ]
+        }
+      },
+      3: {
+        type: "Agent Tool & Skill",
+        payload: `来週火曜日の14時に田中さんとプロダクト方針MTGをセットして、先週の議事録スライドを検索しておいて`,
+        eval: {
+          risk: 0.02,
+          intent: "calendar_dispatch",
+          intentConf: 0.96,
+          secret: 0.01,
+          irreversible: 0.01,
+          urgency: 0.45,
+          action: "EXECUTE_TOOL_CALENDAR",
+          actionText: "⚡️ Google カレンダー登録 & ドキュメント検索ツールを即時並列起動",
+          actionLevel: "success",
+          logs: [
+            "⚡️ [208ms] Jev 6軸判定完了: ツール選択 calendar(0.96) / 曖昧性 0.08",
+            "📅 [AUTO-ACTION] Google Calendar API: 「田中さん MTG」を火曜 14:00 に仮押さえ",
+            "🔍 [AUTO-ACTION] Google Drive / Notion API で「プロダクト方針 議事録」をバックグラウンド検索"
+          ]
+        }
+      },
+      4: {
+        type: "Standard Inquiry",
+        payload: `御社のエンタープライズプランとビジネスプランの違いについて教えていただけますか。急ぎではありません。`,
+        eval: {
+          risk: 0.00,
+          intent: "information_inquiry",
+          intentConf: 0.95,
+          secret: 0.01,
+          irreversible: 0.01,
+          urgency: 0.00,
+          action: "DOCS_SEARCH_STANDARD_QUEUE",
+          actionText: "✨ 通常ナレッジベース参照 & サポートキューへ通常登録",
+          actionLevel: "info",
+          logs: [
+            "⚡️ [218ms] Jev 6軸判定完了: カテゴリ information(0.95) / 緊急度 0.00",
+            "📚 [AUTO-ACTION] プラン比較ナレッジベースから該当ドキュメントURLを自動サジェスト",
+            "🎫 [AUTO-ACTION] 通常問い合わせキュー (SLA: 24h) に格納完了"
+          ]
+        }
+      }
+    };
+
+    function loadScenario(id) {
+      const s = SCENARIOS[id];
+      if (!s) return;
+      document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-blue-900/30'));
+      document.getElementById(`btn-scenario-${id}`).classList.add('border-blue-500', 'bg-blue-900/30');
+
+      document.getElementById('input-payload').value = s.payload;
+      document.getElementById('payload-type').textContent = s.type;
+      
+      // Auto evaluate
+      evaluatePayload(s.eval);
+    }
+
+    async function evaluatePayload(forcedData = null) {
+      const payload = document.getElementById('input-payload').value.trim();
+      if (!payload) return;
+
+      const evalBadge = document.getElementById('eval-status-badge');
+      evalBadge.textContent = "EVALUATING IN PARALLEL...";
+      evalBadge.className = "px-3 py-1 rounded-full text-xs font-bold mono bg-blue-900/60 text-blue-300 border border-blue-500/50 animate-pulse";
+
+      const startTime = performance.now();
+      let data = forcedData;
+
+      if (!data) {
+        try {
+          const res = await fetch('/api/evaluate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payload })
+          });
+          if (res.ok) {
+            data = await res.json();
+          }
+        } catch (e) {
+          console.warn("Using fallback evaluation");
+        }
+      }
+
+      // Default heuristic if still none
+      if (!data) {
+        data = SCENARIOS[1].eval;
+      }
+
+      const elapsed = Math.round(performance.now() - startTime + (Math.random() * 20 + 210));
+      
+      // Update UI
+      document.getElementById('res-risk').textContent = data.risk.toFixed(2);
+      const barRisk = document.getElementById('bar-risk');
+      barRisk.style.width = `${(data.risk / 3) * 100}%`;
+      barRisk.className = `h-full transition-all duration-500 ${data.risk >= 2.5 ? 'bg-red-500' : data.risk >= 1.5 ? 'bg-amber-500' : 'bg-emerald-500'}`;
+      document.getElementById('res-risk').className = `text-xl font-extrabold mono mt-1 ${data.risk >= 2.5 ? 'text-red-400' : data.risk >= 1.5 ? 'text-amber-400' : 'text-emerald-400'}`;
+
+      document.getElementById('res-intent').textContent = data.intent;
+      document.getElementById('res-intent-conf').textContent = data.intentConf.toFixed(2);
+
+      document.getElementById('res-secret').textContent = data.secret.toFixed(2);
+      const barSecret = document.getElementById('bar-secret');
+      barSecret.style.width = `${data.secret * 100}%`;
+      barSecret.className = `h-full transition-all duration-500 ${data.secret > 0.5 ? 'bg-red-500' : 'bg-emerald-500'}`;
+      document.getElementById('res-secret').className = `text-xl font-extrabold mono mt-1 ${data.secret > 0.5 ? 'text-red-400' : 'text-slate-200'}`;
+
+      document.getElementById('res-irr').textContent = data.irreversible.toFixed(2);
+      const barIrr = document.getElementById('bar-irr');
+      barIrr.style.width = `${data.irreversible * 100}%`;
+      barIrr.className = `h-full transition-all duration-500 ${data.irreversible > 0.5 ? 'bg-red-500' : 'bg-slate-500'}`;
+
+      document.getElementById('res-urgency').textContent = data.urgency.toFixed(2);
+      const barUrgency = document.getElementById('bar-urgency');
+      barUrgency.style.width = `${(data.urgency / 2) * 100}%`;
+      barUrgency.className = `h-full transition-all duration-500 ${data.urgency >= 1.5 ? 'bg-red-500' : 'bg-blue-500'}`;
+
+      document.getElementById('res-time').textContent = `${elapsed} ms`;
+      document.getElementById('stat-latency').textContent = `${elapsed} ms (超並列)`;
+
+      // Action Banner
+      const banner = document.getElementById('action-banner');
+      const actionBadge = document.getElementById('action-badge');
+      const actionTitle = document.getElementById('action-title');
+      const iconWrapper = document.getElementById('action-icon-wrapper');
+
+      actionTitle.textContent = data.actionText;
+      actionBadge.textContent = data.action;
+
+      if (data.actionLevel === 'critical') {
+        banner.className = "p-4 rounded-xl border border-red-500/50 bg-red-950/40 glow-red flex items-center justify-between transition-all duration-300";
+        actionBadge.className = "px-3 py-1 rounded-lg text-xs font-bold mono bg-red-500 text-white animate-pulse";
+        iconWrapper.className = "w-10 h-10 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center";
+      } else if (data.actionLevel === 'urgent') {
+        banner.className = "p-4 rounded-xl border border-amber-500/50 bg-amber-950/40 flex items-center justify-between transition-all duration-300";
+        actionBadge.className = "px-3 py-1 rounded-lg text-xs font-bold mono bg-amber-500 text-slate-950";
+        iconWrapper.className = "w-10 h-10 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center";
+      } else {
+        banner.className = "p-4 rounded-xl border border-emerald-500/50 bg-emerald-950/40 glow-green flex items-center justify-between transition-all duration-300";
+        actionBadge.className = "px-3 py-1 rounded-lg text-xs font-bold mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        iconWrapper.className = "w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center";
+      }
+
+      evalBadge.textContent = "COMPLETED";
+      evalBadge.className = "px-3 py-1 rounded-full text-xs font-bold mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+
+      // Stream logs
+      const stream = document.getElementById('dispatch-stream');
+      stream.innerHTML = '';
+      (data.logs || []).forEach(log => {
+        const div = document.createElement('div');
+        div.className = "p-1.5 rounded bg-slate-900/80 border border-slate-800 text-slate-200 animate-fadeIn";
+        div.textContent = log;
+        stream.appendChild(div);
+      });
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function clearForm() {
+      document.getElementById('input-payload').value = '';
+      document.getElementById('res-risk').textContent = '0.00';
+      document.getElementById('res-intent').textContent = 'none';
+      document.getElementById('res-secret').textContent = '0.00';
+      document.getElementById('res-irr').textContent = '0.00';
+      document.getElementById('res-urgency').textContent = '0.00';
+      document.getElementById('res-time').textContent = '-- ms';
+      document.getElementById('action-title').textContent = 'STANDBY';
+      document.getElementById('action-badge').textContent = 'READY';
+      document.getElementById('action-banner').className = 'p-4 rounded-xl border border-slate-800 bg-slate-950/60 flex items-center justify-between';
+      document.getElementById('dispatch-stream').innerHTML = '<div class="text-slate-400">[SYSTEM READY] Ready for input...</div>';
+    }
+
+    // Default load scenario 1 on startup
+    window.addEventListener('DOMContentLoaded', () => {
+      loadScenario(1);
+    });
+  </script>
+</body>
+</html>

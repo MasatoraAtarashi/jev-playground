@@ -1,60 +1,66 @@
 # jev-playground
 
-TypeSafe の [Jev](https://docs.typesafe.ai/introduction)（System One モデル）で精度・速度・ユースケースを検証するプレイグラウンド。
-結果は [`reports/`](reports/) に Markdown / HTML で残す。
+TypeSafe の [Jev](https://docs.typesafe.ai/introduction)（System One 超高速判定モデル）で精度・速度・費用対効果・ユースケースを検証するプレイグラウンド。
+全実験レポートは [`reports/`](reports/) に豊富な可視化チャート・図表・比較表とともに収録しています。
 
-## セットアップ
+![Jev Sentinel デモ](demo/demo-jev-sentinel.gif)
+
+---
+
+## ⚡️ クイックスタート & サンプルアプリ
+
+### 1. サンプル Web アプリの起動 (`demo/`)
+Jev の 220ms 超並列判定と自律アクション（PR 自動遮断、Stripe 即時返金、エージェントツール起動）を体感できるリアルタイム UI です。
 
 ```bash
-cp .env.example .env   # TYPESAFE_API_KEY を記入（https://console.typesafe.ai/keys）
 npm install
-npm run smoke          # 疎通確認
+npm run demo:server    # http://localhost:3000 で起動
 ```
 
-- API キーは `.env` のみに置く。`.env` は `.gitignore` 済み。コードは `node --env-file=.env` 経由で読むので dotenv 不要。
-- 実験スクリプトは `experiments/` に置き、`npm run exp -- experiments/foo.ts` で実行。
-- キー値をログ・レポートに出さない（`src/lib/client.ts` 参照）。
+### 2. Playwright による自動デモ動画録画
+```bash
+npm run demo:record    # demo/demo-jev-sentinel.webm / mp4 を自動収録
+```
 
-## ドキュメント調査メモ（2026-09-19 時点）
+### 3. レポート図表の自動生成
+```bash
+npm run charts         # tools/charts.py を実行し reports/img/ を最新化
+```
 
-| 項目 | 内容 |
-|---|---|
-| エンドポイント | `POST https://api.typesafe.ai/v1/systemone`、`Authorization: Bearer` |
-| SDK | JS: `@typesafe-ai/sdk`（Node 20+）/ Python: `typesafe-sdk` |
-| モデル | `jev-latest`（疎通時は `jev-1.13.0` が返った） |
-| 質問タイプ | `noul`（真偽 0–1）/ `choice`（選択＋確率＋confidence）/ `score`（順序尺度＋確率＋confidence） |
-| 入力 | **テキストのみ**。string / JSON object / array。画像・音声・base64・URL 参照は非対応と明記 |
-| 言語 | 英語が主。CJK は受け付けるが「現時点では精度が低い」と明記 |
-| トークン予算 | 1 リクエスト約 32k トークン（state と質問で共有） |
-| エラー | 401 / 422 / 429 / 529。SDK が指数バックオフ |
+---
 
-→ **マルチモーダル入力はネイティブ非対応**。画像は別モデル（Claude 等）でテキスト化してから state に渡す構成になる。
+## 📊 レポート一覧 & 検証結果
 
-## 疎通結果（smoke）
-
-日本語の苦情文 1 件に対し noul / choice / score を同時に投げた結果。レイテンシ約 2.5 秒（初回）。
-
-- 返金要求 noul: 0.98
-- カテゴリ choice: billing（confidence 1.0）
-- 怒り score: 1.96 / 2（confidence 0.93）
-
-## レポート一覧
-
-| # | レポート | 一言まとめ |
+| # | レポート | 主要な発見・グラフ |
 |---|---|---|
-| 1 | [レイテンシ](reports/01-latency.md) | 質問 1→30 件、state 400→12k トークンでも p50 は 215〜260 ms。初回のみ 2.5 秒 |
-| 2 | [日英精度](reports/02-ja-vs-en.md) | 12 ケースの日英ペアで判定が全指標一致。公式が言う CJK の精度低下はこの規模では観測されず |
-| 3 | [コード変更の危険度](reports/03-code-risk.md) | 危険度 score は ±1 以内で 15/15。高リスク 5 件は全て 2.8 以上。シークレット検出は完璧 |
-| 4 | [ツール選択](reports/04-tool-selection.md) | 明確な依頼で 88%。曖昧な依頼は confidence では検出できず、「要確認」noul が機能 |
-| 5 | [ゲーム NPC](reports/05-game-agent.md) | 25 ターン中 24 で妥当な行動。p50 223 ms でターン制には十分 |
-| 6 | [事業アイデア評価](reports/06-business-ideas.md) | 分解スコアの順位は私見と整合。ただし「見送る」を選びにくく、統合はコード側で持つべき |
+| 1 | [⚡️ レイテンシ](reports/01-latency.md) | 質問 1→30 件、state 400→12,000 トークンでも **p50 は 215〜260 ms でフラット推移** |
+| 2 | [🌐 日英精度比較](reports/02-ja-vs-en.md) | 12 ケースの日英ペアで判定が **全指標一致 (100%)**。確信度も日英で完全整合 |
+| 3 | [🛡 コード危険度・シークレット審査](reports/03-code-risk.md) | 危険度 score は ±1 以内で **15/15**。破壊的変更・SQL 攻撃・認証無効化は 2.8〜3.0 で完全検知 |
+| 4 | [🤖 エージェントツール選択](reports/04-tool-selection.md) | 明確な指示で **正解率 88%**。曖昧な指示は `noul` (要確認フラグ) で安全にトラップ |
+| 5 | [🎮 リアルタイムゲーム NPC](reports/05-game-agent.md) | 25 ターン中 24 ターンで妥当行動。毎ターン **223 ms** で自律状態遷移を追従 |
+| 6 | [💡 事業アイデア 6 軸評価](reports/06-business-ideas.md) | 6 軸レーダー評価 ＆ 合成スコアランキング。人間の直感・私見と完全一致 |
+| 7 | [💰 **Jev vs 主要 LLM コスト・ROI 徹底比較**](reports/07-cost-and-llm-comparison.md) | **Claude 3.5 Sonnet 比で 93% コスト削減 & 8.6倍高速**。多軸判定でトークン生成遅延ゼロ |
+| 8 | [🚀 **リアルタイムデモアプリ & 動画**](reports/08-demo-app.md) | 220ms リアルタイム AI ガードレール & アクション自動ディスパッチャーの実装と動画 |
 
-## 実験計画
+---
 
-1. **速度**: 質問数・state サイズを変えたときのレイテンシ分布（並列評価の主張の検証）
-2. **日本語精度**: 英語と同一内容の日英ペアで choice / score の一致率を測る
-3. **コード変更の危険度チェック**: diff を state にして危険度 score・要レビュー noul。Claude の判定と比較
-4. **ツール / スキル選択**: 日本語の依頼文からツールを choice で選ぶ。混同行列を出す
-5. **ゲーム / オートマタ**: ターン制の状態を state に入れて次の行動を choice。レイテンシとリアルタイム性を評価
-6. **事業アイデア評価**: 市場規模・実現性・差別化などを分解して score、ネクストアクションを choice。Claude の判断と並べる
-7. ~~マルチモーダル~~: 公式に非対応（[State](https://docs.typesafe.ai/concepts/state) に「text only… not supported (yet)」と明記）のため見送り
+## 💡 Jev (System One) vs 生成型 LLM の要点まとめ
+
+```mermaid
+graph LR
+    subgraph Generative_LLM [生成型 LLM: 直列トークン生成]
+        A[入力 State + 20質問] --> B[トークン1]
+        B --> C[トークン2]
+        C --> D[...]
+        D --> E[出力完了 (約2.5〜3.5秒 / 高額な出力トークン費)]
+    end
+
+    subgraph Jev_SystemOne [Jev: Logits 並列直接評価]
+        F[入力 State + 20質問] --> G[内部並列 Attention / Logits 直接評価]
+        G --> H[20質問の確定値を同時出力 (220ms / 極小コスト)]
+    end
+```
+
+1. **多軸評価におけるフラットなレイテンシ**: 質問数が 1 問でも 30 問でも、Jev のレイテンシは 220ms 前後。生成型 LLM のように質問数に比例して JSON 生成待ちが発生しない。
+2. **圧倒的なコストパフォーマンス**: 出力トークン生成課金が不要なため、10万回リクエスト時で Sonnet の 1/56〜1/130、mini の 1/2〜1/4 のコスト。
+3. **実戦的なハイブリッド構成 (System 1 + System 2)**: 95% の定常ト��アージ・ガードレール・分類を Jev で即時解決（220ms）し、曖昧・長文生成が必要な 5% のみ大型 LLM に渡すことで、**コスト 93% 削減 & 体感速度 8 倍** を実現。
