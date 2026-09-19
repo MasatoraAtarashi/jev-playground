@@ -1,0 +1,15 @@
+{
+  "name": "jev-playground",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "smoke": "node --env-file=.env --experimental-strip-types src/smoke.ts",
+    "exp": "node --env-file=.env --experimental-strip-types"
+  },
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0"
+  }
+}

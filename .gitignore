@@ -1,0 +1,11 @@
+# 環境変数ファイルの除外
+.env
+.env.local
+.env.*.local
+*.env
+
+# 依存・生成物
+node_modules/
+dist/
+*.log
+.DS_Store
