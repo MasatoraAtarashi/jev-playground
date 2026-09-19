@@ -4,6 +4,8 @@
 - state は `{ title, diff }`。質問は 5 件（危険度 score 0–3、要レビュー noul、種類 choice、不可逆 noul、シークレット noul）
 - 正解は人手で付与。危険度の尺度: 0 安全 / 1 低 / 2 中 / 3 高
 
+![危険度](img/03-code-risk.png)
+
 | id | 変更 | 正解risk | risk | 要レビュー | 正解kind | kind(conf) | 不可逆 | secret |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | d1 | READMEのtypo修正 | 0 | 0.00 | 0.45 | docs | docs(1.00) | 0.03 | 0.01 |
